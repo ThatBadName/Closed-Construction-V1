@@ -1,7 +1,7 @@
 {
-    "token": "OTk0NjQ0MDAxMzk3NDI4MzM1.GuS_0c.FT8Q1IunPhAPZXwsqjTOFj2wlWRVrIiWEXSukQ",
-    "mongoUri": "mongodb+srv://ClosedPublic:Sml2022$@closedpublic.y5avi.mongodb.net/closed-construction?retryWrites=true&w=majority",
-    "testGuildId": "994642021425877112",
-    "clientId": "994644001397428335",
+    "token": "",
+    "mongoUri": "",
+    "testGuildId": "",
+    "clientId": "",
     "inBeta": false
 }
