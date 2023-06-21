@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "bot": "node ."
+    "build": "npm i & node src/bot.js",
+    "start": "node src/index.js"
   },
   "dependencies": {
     "@discordjs/rest": "^1.0.0",
