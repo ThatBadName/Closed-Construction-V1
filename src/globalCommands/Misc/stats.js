@@ -41,7 +41,7 @@ module.exports = {
                                 `Registered Users: \`${registeredUserCount.length}\`\n` +
                                 `Most Coins In Wallet: \`${round(highestWallet.wallet).toLocaleString()}\` (<@${highestWallet.userId}>)\n` +
                                 `Most Coins In Bank: \`${round(highestBank.bank).toLocaleString()}\` (<@${highestBank.userId}>)\n` +
-                                `\n(doesnt work) Servers: \-\`\nUsers: \`-\`\nShard: \`${interaction.guild.shard.id.toLocaleString()}/${client.shard.ids.length.toLocaleString() - 1}\``
+                                `\n(doesnt work) Servers: \-\`\nUsers: \`-\`\nShard: \`-/-\``
                         })
                     ]
                 })
