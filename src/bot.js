@@ -776,54 +776,6 @@ app.post("/dblwebhook", webhook.listener(async (vote) => {
 
 app.listen(10002)
 
-client.on('guildCreate', async (guild) => {
-  const g = await client.guilds.cache.get(guild.id)?.fetch()
-  const members = await g.members.fetch()
-  if (guild.memberCount < 25 || members.filter(u => !u.user.bot).size <= members.filter(u => u.user.bot).size + 3) {
-    const channel = guild.channels.cache.find(channel => channel.type === ChannelType.GuildText && channel.permissionsFor(guild.members.me).has('SendMessages'))
-    let failedEmbed = false
-    try {
-      await channel.send({
-        embeds: [
-          new EmbedBuilder()
-          .setTitle('I have left the server')
-          .setDescription(
-            'There are a few reasons that I may have left this server:\n\n\`1.\` Your server has under 25 members\n\`2.\` Your server has more bots than humans\n\`3.\` There are too many bots for the number of humans in your server' +
-            '\n\nThese restrictions are in place because we are trying to get the bot verified and servers like this may get it denied. We will remove these restrictions when the bot is verified' +
-            '. If you would like to still use the bot you can join the support server or use it in another server. If your server manages to not have the things listed above then feel free to reinvite the bot'
-          )
-          .setColor('0x' + colours.alert)
-        ],
-        components: [
-          new ActionRowBuilder()
-          .addComponents(
-            new ButtonBuilder()
-            .setLabel('Invite Me')
-            .setStyle('Link')
-            .setURL('https://discord.com/oauth2/authorize?client_id=994644001397428335&permissions=412921220161&scope=bot%20applications.commands'),
-
-            new ButtonBuilder()
-            .setLabel('Support Server')
-            .setStyle('Link')
-            .setURL('https://discord.gg/9jFqS5H43Q')
-          )
-        ]
-      })
-    } catch {
-      failedEmbed = true
-    }
-    if (failedEmbed === true) {
-      await channel.send(
-        'There are a few reasons that I may have left this server:\n\n\`1.\` Your server has under 25 members\n\`2.\` Your server has more bots than humans\n\`3.\` There are too many bots for the number of humans in your server' +
-        '\n\nThese restrictions are in place because we are trying to get the bot verified and servers like this may get it denied. We will remove these restrictions when the bot is verified' +
-        '. If you would like to still use the bot you can join the support server or use it in another server. If your server manages to not have the things listed above then feel free to reinvite the bot' +
-        '\n\nSupport Server: https://discord.gg/9jFqS5H43Q\nBot Invite: https://discord.com/oauth2/authorize?client_id=994644001397428335&permissions=412921220161&scope=bot%20applications.commands'
-      ).catch(() => {})
-    }
-    setTimeout(() => guild.leave(), 5000)
-  }
-})
-
 function getUnique(array) {
   var unique = [];
 
