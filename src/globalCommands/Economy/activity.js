@@ -37,9 +37,6 @@ module.exports = {
         if (blks === true) return
         const main = await functions.checkMaintinance(interaction)
         if (main === true) return
-
-        const verify = await functions.verify(interaction.user.id, interaction)
-        if (verify === true) return
         const cldn = await functions.cooldownCheck(interaction.user.id, interaction.options.getSubcommand(), 8, interaction)
         if (cldn === true) return
         functions.createRecentCommand(interaction.user.id, interaction.options.getSubcommand(), `None`, interaction)
