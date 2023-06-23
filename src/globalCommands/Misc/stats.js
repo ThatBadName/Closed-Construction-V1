@@ -22,15 +22,6 @@ module.exports = {
         const message = await interaction.deferReply({
             fetchReply: true
         })
-        const promises = [
-            client.shard.fetchClientValues('guilds.cache.size'),
-            client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)),
-        ];
-        
-        Promise.all(promises)
-            .then(async(results) => {
-                const totalGuilds = results[0].reduce((acc, guildCount) => acc + guildCount, 0);
-                const totalMembers = results[1].reduce((acc, memberCount) => acc + memberCount, 0);
                 const registeredUserCount = await profileSchema.find()
                 const highestBank = await profileSchema.findOne({showOnLeaderboards: true}).sort({bank: -1})
                 const highestWallet = await profileSchema.findOne({showOnLeaderboards: true}).sort({wallet: -1})
@@ -50,7 +41,7 @@ module.exports = {
                                 `Registered Users: \`${registeredUserCount.length}\`\n` +
                                 `Most Coins In Wallet: \`${round(highestWallet.wallet).toLocaleString()}\` (<@${highestWallet.userId}>)\n` +
                                 `Most Coins In Bank: \`${round(highestBank.bank).toLocaleString()}\` (<@${highestBank.userId}>)\n` +
-                                `\nServers: \`${totalGuilds.toLocaleString()}\`\nUsers: \`${totalMembers.toLocaleString()}\`\nShard: \`${interaction.guild.shard.id.toLocaleString()}/${client.shard.ids.length.toLocaleString() - 1}\``
+                                `\n(doesnt work) Servers: \-\`\nUsers: \`-\`\nShard: \`${interaction.guild.shard.id.toLocaleString()}/${client.shard.ids.length.toLocaleString() - 1}\``
                         })
                     ]
                 })
