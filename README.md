@@ -9,3 +9,6 @@ Support: https://discord.gg/9jFqS5H43Q
 - Run `npm run build`
 - The bot will be online
 If you have already started the bot once you can use `npm run start`
+
+## Credit
+You must not delete this README.md file from wherever you host your bot
