@@ -11,8 +11,6 @@ const profileSchema = require('../../models/userProfile')
 const maintenance = require('../../models/mantenance')
 const blacklistedUsers = require('../../models/blacklistUser')
 const blacklistedGuilds = require('../../models/blacklistGuild')
-const verification = require('../../models/verification')
-const failedVerification = require('../../models/verificationFailed')
 const boxes = require('../../things/lootBoxes/boxes')
 const { colours } = require('../../things/constants')
 
@@ -265,8 +263,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'dig', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'dig', `None`, interaction)
@@ -281,8 +277,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'beg', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'beg', `None`, interaction)
@@ -297,8 +291,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'fish', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'fish', `None`, interaction)
@@ -313,8 +305,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'mine', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'mine', `None`, interaction)
@@ -329,8 +319,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'forage', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'forage', `None`, interaction)
@@ -345,8 +333,6 @@ module.exports = {
                 if (blks === true) return
                 const main = await functions.checkMaintinance(interaction)
                 if (main === true) return
-                const verify = await functions.verify(interaction.user.id, interaction)
-                if (verify === true) return
                 const cldn = await functions.cooldownCheck(interaction.user.id, 'hunt', 8, interaction)
                 if (cldn === true) return
                 functions.createRecentCommand(interaction.user.id, 'hunt', `None`, interaction)
@@ -417,333 +403,6 @@ module.exports = {
                     ephemeral: true
                 })
 
-            } else if (interaction.customId.startsWith('verify')) {
-                let code = interaction.customId.slice(-7)
-                const verifyDoc = await verification.findOne({
-                    code: code
-                })
-                if (!verifyDoc) return interaction.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                        .setTitle('This is not a valid verification message')
-                        .setColor(16777215)
-                    ],
-                    ephemeral: true
-                })
-                if (verifyDoc.userId !== interaction.user.id) return interaction.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                        .setTitle('This is not for you')
-                        .setColor(16777215)
-                    ],
-                    ephemeral: true
-                })
-
-                let firstTextBox
-                let customPriceModal = new ModalBuilder()
-                    .setTitle('Verification')
-                    .setCustomId('verify-modal')
-
-                const price = new TextInputBuilder()
-                    .setCustomId('code')
-                    .setLabel('Please enter the verification code')
-                    .setMinLength(7)
-                    .setMaxLength(7)
-                    .setRequired(true)
-                    .setPlaceholder(code)
-                    .setStyle('Short')
-
-                firstTextBox = new ActionRowBuilder().addComponents(price)
-                customPriceModal.addComponents(firstTextBox)
-                interaction.showModal(customPriceModal)
-                await interaction.awaitModalSubmit({
-                    time: 30000
-                }).catch(() => {
-                    interaction.followUp({
-                        embeds: [
-                            new EmbedBuilder()
-                            .setTitle('You took too long to verify')
-                            .setColor(16777215)
-                        ],
-                        ephemeral: true
-                    })
-                }).then(async (i) => {
-                    if (!i) return
-                    let userCode = i.fields.getTextInputValue('code')
-                    let correctChars = 0
-                    userCode = userCode.toLowerCase()
-                    let codeArray = code.split('')
-                    let userCodeArray = userCode.split('')
-                    for (let i = 0; i < 7; i += 1) {
-                        if (userCodeArray[i] === codeArray[i]) correctChars++
-                    }
-
-                    if (correctChars >= 6) {
-                        i.reply({
-                            embeds: [
-                                new EmbedBuilder()
-                                .setTitle('You have passed verification')
-                                .setColor(16777215)
-                            ],
-                            ephemeral: true
-                        })
-
-                        const message = await interaction.channel.messages.fetch(verifyDoc.message)
-                        await message.delete()
-
-                        verifyDoc.delete()
-
-                        let newProfile = await profileSchema.findOne({
-                            userId: interaction.user.id
-                        })
-                        if (!newProfile) newProfile = await profileSchema.create({
-                            userId: interaction.user.id
-                        })
-                        const newDate = new Date()
-                        newDate.setMinutes(newDate.getMinutes() + Math.floor(Math.random() * ((newProfile.trust + 30) - (newProfile.trust + 10)) + (newProfile.trust + 10)))
-                        if (newProfile.trust >= 200) {
-                            newProfile.antiVerificationExpires = newDate
-                            newProfile.save()
-                        } else {
-                            newProfile.antiVerificationExpires = newDate
-                            newProfile.trust += 5
-                            newProfile.save()
-                        }
-                    } else {
-                        verifyDoc.failed += 1
-                        verifyDoc.save()
-
-                        if (verifyDoc.failed === 8) {
-                            let failedVerif = await failedVerification.findOne({
-                                userId: interaction.user.id,
-                            })
-
-                            if (!failedVerif) {
-                                interaction.followUp({
-                                    embeds: [
-                                        new EmbedBuilder()
-                                        .setTitle('You have failed verification')
-                                        .setColor(16777215)
-                                        .setDescription(`You have now been banned from using the bot for 24 hours`)
-                                    ],
-                                    ephemeral: true
-                                })
-
-                                verifyDoc.delete()
-                                const prf = await profileSchema.findOne({userId: userId})
-                                if (prf.trust - 50 < 0) prf.trust = 0
-                                else prf.trust -= 50
-                                prf.save()
-
-                                const expires = new Date()
-                                expires.setHours(expires.getHours() + 24)
-                                const caseNumber = await botSchema.findOne()
-
-                                await blacklistedUsers.create({
-                                    id: caseNumber.blacklistCaseAmount + 1,
-                                    userId: interaction.user.id,
-                                    reason: `You have failed verification`,
-                                    expires: expires,
-                                    duration: '1 Day'
-                                })
-
-                                caseNumber.blacklistCaseAmount += 1
-                                caseNumber.save()
-
-                                failedVerification.create({
-                                    userId: interaction.user.id,
-                                    strike: 1,
-                                    expires: expires.setHours(expires.getHours() + 192)
-                                })
-                            } else if (failedVerif.strike === 1) {
-                                interaction.followUp({
-                                    embeds: [
-                                        new EmbedBuilder()
-                                        .setTitle('You have failed verification')
-                                        .setColor(16777215)
-                                        .setDescription(`You have now been banned from using the bot for 1 week`)
-                                    ],
-                                    ephemeral: true
-                                })
-
-                                failedVerif.delete()
-
-                                verifyDoc.delete()
-                                const prf = await profileSchema.findOne({userId: userId})
-                                if (prf.trust - 50 < 0) prf.trust = 0
-                                else prf.trust -= 50
-                                prf.save()
-
-                                const expires = new Date()
-                                expires.setHours(expires.getHours() + 168)
-                                const caseNumber = await botSchema.findOne()
-
-                                await blacklistedUsers.create({
-                                    id: caseNumber.blacklistCaseAmount + 1,
-                                    userId: interaction.user.id,
-                                    reason: `You have failed verification`,
-                                    expires: expires,
-                                    duration: '1 Week'
-                                })
-
-                                caseNumber.blacklistCaseAmount += 1
-                                caseNumber.save()
-
-                                failedVerification.create({
-                                    userId: interaction.user.id,
-                                    strike: 2,
-                                    expires: expires.setHours(expires.getHours() + 336)
-                                })
-                            } else if (failedVerif.strike === 2) {
-                                interaction.followUp({
-                                    embeds: [
-                                        new EmbedBuilder()
-                                        .setTitle('You have failed verification')
-                                        .setColor(16777215)
-                                        .setDescription(`You have now been banned from using the bot for 1 month`)
-                                    ],
-                                    ephemeral: true
-                                })
-
-                                failedVerif.delete()
-                                const prf = await profileSchema.findOne({userId: userId})
-                                if (prf.trust - 50 < 0) prf.trust = 0
-                                else prf.trust -= 50
-                                prf.save()
-
-                                verifyDoc.delete()
-
-                                const expires = new Date()
-                                expires.setHours(expires.getHours() + 730)
-                                const caseNumber = await botSchema.findOne()
-
-                                await blacklistedUsers.create({
-                                    id: caseNumber.blacklistCaseAmount + 1,
-                                    userId: interaction.user.id,
-                                    reason: `You have failed verification`,
-                                    expires: expires,
-                                    duration: '1 Month'
-                                })
-
-                                caseNumber.blacklistCaseAmount += 1
-                                caseNumber.save()
-
-                                failedVerification.create({
-                                    userId: interaction.user.id,
-                                    strike: 3,
-                                    expires: expires.setHours(expires.getHours() + 898)
-                                })
-                            } else if (failedVerif.strike === 3) {
-                                interaction.followUp({
-                                    embeds: [
-                                        new EmbedBuilder()
-                                        .setTitle('You have failed verification')
-                                        .setColor(16777215)
-                                        .setDescription(`You have now been banned from using the bot for 1 year`)
-                                    ],
-                                    ephemeral: true
-                                })
-
-                                failedVerif.delete()
-
-                                verifyDoc.delete()
-                                const prf = await profileSchema.findOne({userId: userId})
-                                if (prf.trust - 50 < 0) prf.trust = 0
-                                else prf.trust -= 50
-                                prf.save()
-
-                                const expires = new Date()
-                                expires.setHours(expires.getHours() + 8766)
-                                const caseNumber = await botSchema.findOne()
-
-                                await blacklistedUsers.create({
-                                    id: caseNumber.blacklistCaseAmount + 1,
-                                    userId: interaction.user.id,
-                                    reason: `You have failed verification`,
-                                    expires: expires,
-                                    duration: '1 Year'
-                                })
-
-                                caseNumber.blacklistCaseAmount += 1
-                                caseNumber.save()
-
-                                failedVerification.create({
-                                    userId: interaction.user.id,
-                                    strike: 4,
-                                    expires: expires.setHours(expires.getHours() + 8934 + 144)
-                                })
-                            } else if (failedVerif.strike === 4) {
-                                interaction.followUp({
-                                    embeds: [
-                                        new EmbedBuilder()
-                                        .setTitle('You have failed verification')
-                                        .setColor(16777215)
-                                        .setDescription(`You have now been banned from using the bot. This is the 5th time you have failed so your profile has been wiped`)
-                                    ],
-                                    ephemeral: true
-                                })
-
-                                failedVerif.delete()
-
-                                verifyDoc.delete()
-                                const prf = await profileSchema.findOne({userId: userId})
-                                if (prf.trust - 50 < 0) prf.trust = 0
-                                else prf.trust -= 50
-                                prf.save()
-
-                                const expires = new Date()
-                                expires.setHours(expires.getHours() + 8766)
-                                const caseNumber = await botSchema.findOne()
-
-                                await blacklistedUsers.create({
-                                    id: caseNumber.blacklistCaseAmount + 1,
-                                    userId: interaction.user.id,
-                                    reason: `You have failed verification. This is the 5th time you have failed so your profile has been wiped`,
-                                    duration: 'Eternal'
-                                })
-
-                                await profileSchema.collection.deleteMany({
-                                    userId: interaction.user.id
-                                })
-                                await commandCooldowns.collection.deleteMany({
-                                    userId: interaction.user.id
-                                })
-                                await activeDevCoinSchema.collection.deleteMany({
-                                    userId: interaction.user.id
-                                })
-                                await notificationSchema.collection.deleteMany({
-                                    userId: interaction.user.id
-                                })
-
-                                caseNumber.blacklistCaseAmount += 1
-                                caseNumber.save()
-                            }
-                        } else {
-                            interaction.followUp({
-                                content: `<@${verifyDoc.userId}>,`,
-                                embeds: [
-                                    new EmbedBuilder()
-                                    .setTitle('Incorrect code')
-                                    .setColor(16777215)
-                                    .setDescription(`Please try again. Press the button below and enter this code: \`${verifyDoc.code}\``)
-                                    .setFooter({
-                                        text: `You have ${8 - verifyDoc.failed} attempt${8 - verifyDoc.failed === 1 ? '' : 's'} left`
-                                    })
-                                ],
-                                ephemeral: true,
-                                components: [
-                                    new ActionRowBuilder()
-                                    .addComponents(
-                                        new ButtonBuilder()
-                                        .setLabel('Verify')
-                                        .setStyle('Danger')
-                                        .setCustomId(`verify-${verifyDoc.code}`)
-                                    )
-                                ]
-                            })
-                        }
-                    }
-                })
             }
 
             if (interaction.customId === 'firstPage') return
