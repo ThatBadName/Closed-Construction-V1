@@ -1,5 +1,6 @@
 # Closed-Construction-V1
 Support: https://discord.gg/9jFqS5H43Q
+This project is no longer maintained. I will not fix any bugs, if you want them fixed, do it yourself
 
 ## Self Hosting
 - Clone this repo
